@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using Isopoh.Cryptography.Argon2;
+
 
 namespace SecurityServer
 {
@@ -16,8 +20,6 @@ namespace SecurityServer
             db = context;
             if (!db.User.Any())
             {
-                db.User.Add(new User { Name = "Tom", Phone = 1234, Password = "1234", Id = 1});
-                db.User.Add(new User { Name = "Alice", Phone= 312314, Password = "123123", Id = 2});
                 db.SaveChanges();
             }
         }
@@ -40,17 +42,49 @@ namespace SecurityServer
         [HttpPost]
         public async Task<ActionResult<User>> Post(User user)
         {
+            
             if (user == null)
             {
                 return BadRequest();
             }
- 
+            
+            user.Password = Argon2.Hash(user.Password);
+
             db.User.Add(user);
             await db.SaveChangesAsync();
             return Ok(user);
         }
- 
-        // PUT api/users/
+        
+        [HttpPost]
+        [Route("Verify")]
+        public async Task<ActionResult<User>> Verify(User user)
+        {
+            Console.WriteLine(user.Password);
+            if (user.Password == "")
+            {
+                return BadRequest();
+            }
+
+            var userDb = db.User.ToListAsync().Result.Find(x => x.Name == user.Name);
+
+            if (userDb == null)
+            {
+                return BadRequest("Incorrect Username");
+            }
+            
+            if (Argon2.Verify(userDb.Password, user.Password))
+            {
+                return Ok(userDb);
+            }
+            
+            return BadRequest("Incorrect Password");
+            // user.Password = Argon2.Hash(user.Password);
+            //
+            // db.User.Add(user);
+            // await db.SaveChangesAsync();
+            // return Ok(user);
+        }
+        
         [HttpPut]
         public async Task<ActionResult<User>> Put(User user)
         {

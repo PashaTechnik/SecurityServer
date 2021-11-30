@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityServer", "SecurityServer\SecurityServer.csproj", "{A189943C-09E1-45E7-A34D-0BD12FD64506}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A189943C-09E1-45E7-A34D-0BD12FD64506}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A189943C-09E1-45E7-A34D-0BD12FD64506}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A189943C-09E1-45E7-A34D-0BD12FD64506}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A189943C-09E1-45E7-A34D-0BD12FD64506}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
