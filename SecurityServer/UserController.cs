@@ -5,16 +5,22 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Isopoh.Cryptography.Argon2;
+using Isopoh.Cryptography.SecureArray;
 
 
 namespace SecurityServer
 {
+    
+
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         securityContext db;
+        private static readonly RandomNumberGenerator Rng = System.Security.Cryptography.RandomNumberGenerator.Create();
         public UserController(securityContext context)
         {
             db = context;
@@ -48,7 +54,34 @@ namespace SecurityServer
                 return BadRequest();
             }
             
-            user.Password = Argon2.Hash(user.Password);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(user.Password);
+            byte[] salt = new byte[16];
+            Rng.GetBytes(salt);
+            var config = new Argon2Config
+            {
+                Type = Argon2Type.DataIndependentAddressing,
+                Version = Argon2Version.Nineteen,
+                TimeCost = 10,
+                MemoryCost = 32768,
+                Lanes = 5,
+                Threads = Environment.ProcessorCount,
+                Password = passwordBytes,
+                Salt = salt,
+                HashLength = 20
+            };
+            
+            var argon2A = new Argon2(config);
+            string hashString;
+            using(SecureArray<byte> hashA = argon2A.Hash())
+            {
+                hashString = config.EncodeString(hashA.Buffer);
+            }
+
+            
+            
+            //user.Password = Argon2.Hash(user.Password);
+            user.Password = hashString;
+            
 
             db.User.Add(user);
             await db.SaveChangesAsync();
@@ -65,18 +98,25 @@ namespace SecurityServer
                 return BadRequest();
             }
 
-            var userDb = db.User.ToListAsync().Result.Find(x => x.Name == user.Name);
+            //var userDb = db.User.ToListAsync().Result.Find(x => x.Name == user.Name);
+            var usersDb = db.User.ToListAsync().Result.Where(x => x.Name == user.Name);
 
-            if (userDb == null)
+            if (usersDb.Count() == 0)
             {
                 return BadRequest("Incorrect Username");
             }
             
-            if (Argon2.Verify(userDb.Password, user.Password))
+
+            Console.WriteLine(user.Password);
+
+            foreach (var userDb in usersDb)
             {
-                return Ok(userDb);
+                if (Argon2.Verify(userDb.Password, user.Password))
+                {
+                    return Ok(userDb);
+                }
             }
-            
+
             return BadRequest("Incorrect Password");
             // user.Password = Argon2.Hash(user.Password);
             //

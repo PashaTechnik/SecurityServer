@@ -1,0 +1,6 @@
+framework module Pods_Security_Client {
+  umbrella header "Pods-Security Client-umbrella.h"
+
+  export *
+  module * { export * }
+}
